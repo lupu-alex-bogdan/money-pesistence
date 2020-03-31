@@ -1,5 +1,6 @@
 package config;
 
+import consumer.QueueConsumer;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
@@ -7,35 +8,34 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import rabbit.QueueConsumer;
 
 @Configuration
 public class RabbitConfig {
 
     private static final String LISTENER_METHOD = "receiveMessage";
+    @Value("${exchange.name}")
+    private String exchangeName;
     @Value("${queue.name}")
     private String queueName;
-    @Value("${fanout.exchange}")
-    private String fanoutExchange;
-    @Value("${routing.key}")
-    private String routingKey;
-    @Value("${fanout.exchange.dlx}")
-    private String fanoutExchangeDlx;
+    @Value("${exchange.name.dlx}")
+    private String exchangeNameDlx;
     @Value("${routing.key.dlx}")
     private String routingKeyDlx;
+    @Value("${routing.key}")
+    private String routingKey;
 
     @Bean
     Queue queue() {
         return QueueBuilder.durable(queueName)
-                .deadLetterExchange(fanoutExchangeDlx)
+                .deadLetterExchange(exchangeNameDlx)
                 .deadLetterRoutingKey(routingKeyDlx)
-                .ttl(1000)
+                .ttl(15000)
                 .build();
     }
 
     @Bean
     Exchange exchange() {
-        return new FanoutExchange(fanoutExchange);
+        return new DirectExchange(exchangeName);
     }
 
     @Bean
